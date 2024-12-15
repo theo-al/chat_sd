@@ -1,16 +1,13 @@
 from xmlrpc.server import SimpleXMLRPCServer
 
-from .room_manager    import RoomManager
-from .message_manager import MessageManager
+from .room_manager import RoomManager
 
 from .. import SERV_CHAT
-
 
 # Configuração inicial
 ADDR, PORT = SERV_CHAT
 
-room_manager    = RoomManager()
-message_manager = MessageManager()
+room_manager = RoomManager()
 
 # Métodos RPC
 def create_room(room_name):
@@ -19,12 +16,15 @@ def create_room(room_name):
 def join_room(username, room_name):
     return room_manager.join_room(username, room_name)
 
+def leave_room(username, room_name):
+    return room_manager.leave_room(username, room_name)
+
 
 def send_message(username, room_name, content, recipient=None):
-    return message_manager.add_message(room_name, username, content, recipient)
+    return room_manager.add_message(room_name, username, content, recipient)
 
 def receive_messages(username, room_name):
-    return message_manager.get_messages(room_name, recipient=username)
+    return room_manager.get_messages(room_name, recipient=username)
 
 
 def list_rooms():
@@ -39,6 +39,7 @@ def main(args: list[str]):
 
     server.register_function(create_room,      "create_room")
     server.register_function(join_room,        "join_room")
+    server.register_function(leave_room,       "leave_room")
     server.register_function(send_message,     "send_message")
     server.register_function(receive_messages, "receive_messages")
     server.register_function(list_rooms,       "list_rooms")
