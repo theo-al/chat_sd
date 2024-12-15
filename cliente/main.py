@@ -4,45 +4,65 @@ from xmlrpc.client import ServerProxy
 
 from threading import Thread
 from queue     import Queue
-from time      import sleep
+
+from shutil import get_terminal_size
 
 from .. import CHAT_ADDR, CHAT_PORT #! binder
 
-#! fazer comandos para criar sala, sussurar, etc
-#! rpc pra sair da sala
+
+#! usar comandos para criar sala, sair da sala, etc
 #! mover coisas pros lugares certos
 #! parsear args linha de comando
 #! lidar com entrada inválida pro rpc
+#! KeyboardInterrupt
+#! fazer funçãozinha pra lidar com wrap e linhas
+#! cores
+
 
 # setape
-binder = ServerProxy(f"http://{CHAT_ADDR}:{CHAT_PORT}") #! binder
+binder = ServerProxy(f"http://{CHAT_ADDR}:{CHAT_PORT}", allow_none=True) #! binder
 
 username  = input("Enter your username: ")
 room_name = input("Enter the room name: ")
 
-messages = []
+messages = list[dict]()
+q        = Queue[str]()
+extra    = ''
+quit     = False
 
 _ = binder.create_room(room_name) #! não fazer isso aqui
 _ = binder.join_room(username, room_name)
 
 clear_scr_seq = subprocess.check_output('cls||clear',
                                         shell=True).decode()
+# clear_scr_seq = f"\033[H\033[{2}J"
 
 def clear_scr():
-    print(clear_scr_seq, end='')
-    # m = 2; print(f"\033[H\033[{m}J", end="")
+    print(clear_scr_seq, end='') 
 
 def move_cursor(x: int, y: int):
     print(f"\033c[{x};{y}f") #! checar ordem / portabilidade
 
+def msg_to_tuple(msg: dict):
+    return msg['timestamp'], msg['from'], msg['to'], msg['content']
 
-def msg_to_tuple(msg):
-    return msg['timestamp'], msg['from'], msg['content']
+def render_msg(msg: dict) -> str:
+    ts, author, recipient, content = msg_to_tuple(msg)
+    return f"[{ts}] {author}: {content}" if not recipient else \
+           f"[{ts}] {author} (para você): {content}"
 
-def print_conversation(msgs: list[dict[str, str]]):
-    for m in msgs:
-        ts, author, content = msg_to_tuple(m)
-        print(f"[{ts}] {author}: {content}")
+def draw_scr(title: str='chat',
+             msgs: list[dict[str, str]]=[],
+             extra: str='\n',
+             prompt: str='>'):
+    sz = get_terminal_size()
+
+    print(title[:sz.columns]) #! não vai aparecer se tiver muita mensagem
+    for m in msgs[-sz.lines+3:]:
+        print(render_msg(m)[:sz.columns])
+    print(extra[:sz.columns])
+
+    print(prompt[:sz.columns], end=' ', flush=True)
 
 def msg_eql(a: dict, b: dict):
     return msg_to_tuple(a) == msg_to_tuple(b)
@@ -60,34 +80,46 @@ def queue_input(queue: Queue):
         msg = input().strip()
         queue.put(msg)
 
-q = Queue()
 Thread(name='input_thread', daemon=True,
        target=queue_input, args=[q]).start()
 
 _ = binder.send_message(username, room_name, '') #! não fazer isso
-while True:
+while not quit:
     clear = False
+
     while not q.empty():
+        extra = ''
+
         msg = q.get()
-
         if msg.startswith(':'):
-            cmd = msg[1:]
+            cmd, *args = msg[1:].split() \
+                         if len(msg) > 1 \
+                         else ' ', []
 
-            if   is_cmd(cmd, 'quit'): exit()
+            if   is_cmd(cmd, 'quit'): quit = True
             elif is_cmd(cmd, 'exit'):
-                assert False, "comando não implementado: exit"
+                _ = binder.leave_room(username, room_name)
+                quit = True #! levar pra um menu
             elif is_cmd(cmd, 'tell'):
-                assert False, "comando não implementado: tell"
+                recipient_name, *rest = args
+                msg = ' '.join(rest).strip()
+                if msg:
+                    _ = binder.send_message(username, room_name, msg, recipient_name)
+                extra = f"enviada mensagem privada '{msg}' a {recipient_name}"
             else:
-                print(f"comando inválido: {msg}")
-                sleep(1.1)
+                extra = f"comando inválido: {msg}"
         elif msg:
             _ = binder.send_message(username, room_name, msg)
+
         clear = True
 
     new_msgs = binder.receive_messages(username, room_name)
     if clear or not hist_eql(new_msgs, messages):
         clear_scr()
-        print_conversation(new_msgs)
-        print(f'{username}> ', end='', flush=True)
+        draw_scr(title=f'chat da sala {room_name}',
+                 msgs=new_msgs,
+                 extra=extra,
+                 prompt=f'{username}>')
         messages = new_msgs
+
+_ = binder.leave_room(username, room_name) #! fazer só se não tiver saído
