@@ -10,12 +10,15 @@ from shutil import get_terminal_size
 from .. import CHAT_ADDR, CHAT_PORT #! binder
 
 
-#! usar comandos para criar sala, sair da sala, etc
 #! mover coisas pros lugares certos
-#! parsear args linha de comando
 #! lidar com entrada inválida pro rpc
+#! lidar com retornos das funções
+#! fazer menu principal (com opção de ver e criar salas)
+#! fazer main()
+
+#! parsear args linha de comando
 #! KeyboardInterrupt
-#! fazer funçãozinha pra lidar com wrap e linhas
+#! fazer funçãozinha pra lidar com line wrap e linhas
 #! cores
 
 
@@ -94,7 +97,7 @@ while not quit:
         if msg.startswith(':'):
             cmd, *args = msg[1:].split() \
                          if len(msg) > 1 \
-                         else ' ', []
+                         else (' ', [])
 
             if   is_cmd(cmd, 'quit'): quit = True
             elif is_cmd(cmd, 'exit'):
@@ -113,13 +116,19 @@ while not quit:
 
         clear = True
 
-    new_msgs = binder.receive_messages(username, room_name)
-    if clear or not hist_eql(new_msgs, messages):
-        clear_scr()
-        draw_scr(title=f'chat da sala {room_name}',
-                 msgs=new_msgs,
-                 extra=extra,
-                 prompt=f'{username}>')
-        messages = new_msgs
+    #! esse if tá aqui pq quando a gente dava exit:
+        # 1. a sala é deletada imediatamente
+        # 2. sai do programa só depois que o while checa o quit
+        # 3. falta um check no servidor
+    if not quit:
+        new_msgs = binder.receive_messages(username, room_name)
+
+        if clear or not hist_eql(new_msgs, messages):
+            clear_scr()
+            draw_scr(title=f'chat da sala {room_name}',
+                    msgs=new_msgs,
+                    extra=extra,
+                    prompt=f'{username}>')
+            messages = new_msgs
 
 _ = binder.leave_room(username, room_name) #! fazer só se não tiver saído
