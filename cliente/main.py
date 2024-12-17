@@ -15,11 +15,14 @@ from .. import CHAT_ADDR, CHAT_PORT #! binder
 #! lidar com retornos das funções
 #! fazer menu principal (com opção de ver e criar salas)
 #! fazer main()
+#! fazer uma thread buscadora de mensagem
 
+#! mostrar diferente quando alguém entra na sala
 #! parsear args linha de comando
 #! KeyboardInterrupt
 #! fazer funçãozinha pra lidar com line wrap e linhas
 #! cores
+#! try except pra ConnectionRefusedError
 
 
 # setape
@@ -29,9 +32,9 @@ username  = input("Enter your username: ")
 room_name = input("Enter the room name: ")
 
 messages = list[dict]()
-q        = Queue[str]()
-extra    = ''
-quit     = False
+q     = Queue[str]()
+extra = ''
+quit  = False
 
 _ = binder.create_room(room_name) #! não fazer isso aqui
 _ = binder.join_room(username, room_name)
@@ -56,12 +59,12 @@ def render_msg(msg: dict) -> str:
 
 def draw_scr(title: str='chat',
              msgs: list[dict[str, str]]=[],
-             extra: str='\n',
+             extra: str=' ',
              prompt: str='>'):
     sz = get_terminal_size()
 
     print(title[:sz.columns]) #! não vai aparecer se tiver muita mensagem
-    for m in msgs[-sz.lines+3:]:
+    for m in msgs[-sz.lines+3:]: #! descobrir esse 3 com código
         print(render_msg(m)[:sz.columns])
     print(extra[:sz.columns])
 
@@ -109,6 +112,9 @@ while not quit:
                 if msg:
                     _ = binder.send_message(username, room_name, msg, recipient_name)
                 extra = f"enviada mensagem privada '{msg}' a {recipient_name}"
+            elif is_cmd(cmd, 'list'):
+                users = binder.list_users(room_name)
+                extra = 'usuários nessa sala: ' + ', '.join(users)
             else:
                 extra = f"comando inválido: {msg}"
         elif msg:

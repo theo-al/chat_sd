@@ -3,10 +3,10 @@ from xmlrpc.server import SimpleXMLRPCServer
 from .  import room_manager
 from .. import SERV_CHAT
 
-# Configuração inicial
+# configuração inicial
 ADDR, PORT = SERV_CHAT
 
-# Métodos RPC
+# métodos RPC
 def create_room(room_name):
     return room_manager.create_room(room_name)
 
