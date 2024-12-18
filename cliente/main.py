@@ -47,10 +47,10 @@ def queue_input(queue: Queue) -> Never:
         msg = input().strip()
         queue.put(msg)
 
-def interpret_command(msg: str, extra='') -> str:
+def interpret_command(msg: str, lines=[], extra='') -> tuple[list, str]:
     if len(msg) > 1:
         cmd, *args = msg[1:].split()
-    else: return extra
+    else: return lines, extra
 
     if   is_cmd(cmd, 'quit'): raise KeyboardInterrupt # rsrsrs
     elif is_cmd(cmd, 'exit'):
@@ -58,24 +58,30 @@ def interpret_command(msg: str, extra='') -> str:
         #! tamo fazendo igual o quit, sair da sala levar pra um menu em vez disso
 
     elif is_cmd(cmd, 'tell'):
-        uso = "modo de uso: tell <destino> <mensagem>"
+        usage = "modo de uso: tell <destino> <mensagem>"
         if args:
             recipient, *rest = args
-        else: return uso
+        else: return lines, usage
  
         msg = ' '.join(rest).strip()
         if msg:
             _ = binder.send_message(username, room_name, msg, recipient)
-        else: return uso
+        else: return lines, usage
 
         extra = f"enviada mensagem privada '{msg}' a {recipient}"
     elif is_cmd(cmd, 'list'):
         users = binder.list_users(room_name)
         extra = 'usuários nessa sala: ' + ', '.join(users)
+    elif is_cmd(cmd, 'help'):
+        lines = ["[ajuda] comandos disponíveis:",
+                 ":quit                      [sai do programa]",
+                 ":exit                      [sai da sala]",
+                 ":tell <destino> <mensagem> [manda uma mensagem privada]",
+                 ":list                      [lista os usuários na sala]"]
     else:
         extra = f"comando inválido: {msg}"
 
-    return extra
+    return lines, extra
 
 def main():
     global msgs, username, room_name
@@ -87,15 +93,16 @@ def main():
     #! ^ pra não precisar disso tem que mexer no servidor
 
     clear = True
+    lines = []
     extra = 'dica: escreva e aperte enter para enviar uma mensagem, ' \
             'veja os comandos disponíveis com :help' #! ainda não tá assim
     while True:
         if not q.empty():
-            clear, extra = True, ''
+            clear, lines, extra = True, [], ''
 
             msg = q.get()
             if   msg.startswith(':'):
-                extra = interpret_command(msg)
+                lines, extra = interpret_command(msg)
             elif msg:
                 _ = binder.send_message(username, room_name, msg)
 
@@ -105,6 +112,7 @@ def main():
             ui.clear_scr()
             ui.draw_scr(title=f'chat da sala {room_name}',
                         msgs=new_msgs,
+                        lines=lines,
                         extra=extra,
                         prompt=f'{username}>')
             msgs = new_msgs

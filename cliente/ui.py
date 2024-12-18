@@ -26,13 +26,19 @@ def render_msg(msg: dict) -> str:
 
 def draw_scr(title: str='chat',
              msgs: list[dict[str, str]]=[],
+             lines: list[str]=[],
              extra: str=' ',
              prompt: str='>') -> None:
     sz = get_terminal_size()
+    max_msgs = sz.lines - len(lines) - 3#! descobrir esse 3 com código
 
-    print(title[:sz.columns]) #! não vai aparecer se tiver muita mensagem
-    for m in msgs[-sz.lines+3:]: #! descobrir esse 3 com código
+    print(title[:sz.columns]) #! não vai aparecer se tiver mensagens longas
+
+    for m in msgs[-max_msgs:]: 
         print(render_msg(m)[:sz.columns])
+    for l in lines[:sz.lines]:
+        print(l[:sz.columns])
+
     print(extra[:sz.columns])
 
     print(prompt[:sz.columns], end=' ', flush=True)
