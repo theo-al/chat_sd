@@ -15,6 +15,7 @@ from .. import msg_to_tuple
 #! fazer menu principal (com opção de ver e criar salas)
 #! fazer uma thread buscadora de mensagem
 
+#! ver se tem que lidar com Faults
 #! mostrar diferente quando alguém entra na sala
 #! parsear args linha de comando
 #! fazer funçãozinha pra lidar com line wrap e linhas
@@ -28,8 +29,7 @@ binder = ServerProxy(f"http://{CHAT_ADDR}:{CHAT_PORT}", allow_none=True) #! bind
 connected = True
 msgs  = list[dict]()
 q     = Queue[str]()
-extra = 'dica: escreva e aperte enter para enviar uma mensagem, ' \
-        'veja os comandos disponíveis com :help' #! ainda não tá assim
+
 
 def msg_eql(a: dict, b: dict) -> bool:
     return msg_to_tuple(a) == msg_to_tuple(b)
@@ -78,17 +78,18 @@ def interpret_command(msg: str, extra='') -> str:
     return extra
 
 def main():
-    global clear, extra, msgs
-    global username, room_name
+    global msgs, username, room_name
 
     _ = binder.create_room(room_name) #! não fazer isso aqui
     _ = binder.join_room(username, room_name)
 
-    _ = binder.send_message(username, room_name, '') #! não fazer isso
+    #_ = binder.send_message(username, room_name, '')
+    #! ^ pra não precisar disso tem que mexer no servidor
 
+    clear = True
+    extra = 'dica: escreva e aperte enter para enviar uma mensagem, ' \
+            'veja os comandos disponíveis com :help' #! ainda não tá assim
     while True:
-        clear = False
-
         if not q.empty():
             clear, extra = True, ''
 
@@ -107,6 +108,8 @@ def main():
                         extra=extra,
                         prompt=f'{username}>')
             msgs = new_msgs
+
+        clear = False
 
 
 if __name__ == "__main__":

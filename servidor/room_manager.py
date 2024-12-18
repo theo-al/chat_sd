@@ -48,7 +48,8 @@ def add_message(room_name, username, content, recipient=None):
     }
 
     rooms[room_name].messages.append(msg)
-    return msg
+    return True #! retornar False se não for válido de alguma forma
+    #! checar se tem requisito sobre isso no enunciado
 
 #! retornar só as mensagens novas
 def get_messages(room_name, recipient):
