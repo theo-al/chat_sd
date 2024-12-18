@@ -24,13 +24,15 @@ def render_msg(msg: dict) -> str:
     return f"[{ts}] {author}: {content}" if not recipient else \
            f"[{ts}] {author} (para você): {content}"
 
-def draw_scr(title: str='chat',
+def draw_scr(title: str='',
              msgs: list[dict[str, str]]=[],
              lines: list[str]=[],
              extra: str=' ',
              prompt: str='>') -> None:
     sz = get_terminal_size()
     max_msgs = sz.lines - len(lines) - 3#! descobrir esse 3 com código
+
+    #! não printar o título/extra se tiverem vazios, aproveitar pra contar linhas extras
 
     print(title[:sz.columns]) #! não vai aparecer se tiver mensagens longas
 
@@ -42,3 +44,19 @@ def draw_scr(title: str='chat',
     print(extra[:sz.columns])
 
     print(prompt[:sz.columns], end=' ', flush=True)
+
+def warn(msg: str):
+    draw_scr(extra=msg, prompt='')
+
+def input(prompt='', title='', clear=True, queue=None):
+    self = input
+
+    if clear: clear_scr()
+    draw_scr(
+        title=title,
+        extra=prompt,
+    )
+    assert self.queue
+    return self.queue.get()
+
+input.queue = None #! explicar

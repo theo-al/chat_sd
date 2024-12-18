@@ -26,10 +26,20 @@ from .. import msg_to_tuple
 # setape
 binder = ServerProxy(f"http://{CHAT_ADDR}:{CHAT_PORT}", allow_none=True) #! binder
 
-connected = True
+username  = None
+room_name = None
+
 msgs  = list[dict]()
 q     = Queue[str]()
 
+ui.input.queue = q #! explicar
+
+def connected(): #! colocar no stub do binder aqui do client
+    try: binder.ping()
+
+    except ConnectionError: return False
+    except Exception as e:  return False #! checar
+    else:                   return True
 
 def msg_eql(a: dict, b: dict) -> bool:
     return msg_to_tuple(a) == msg_to_tuple(b)
@@ -47,7 +57,8 @@ def queue_input(queue: Queue) -> Never:
         msg = input().strip()
         queue.put(msg)
 
-def interpret_command(msg: str, lines=[], extra='') -> tuple[list, str]:
+def interpret_command(msg: str,) -> tuple[list, str]:
+    lines, extra = [], ' '
     if len(msg) > 1:
         cmd, *args = msg[1:].split()
     else: return lines, extra
@@ -83,14 +94,46 @@ def interpret_command(msg: str, lines=[], extra='') -> tuple[list, str]:
 
     return lines, extra
 
+def register_menu(): #! tá meio esquisito
+    global username, room_name
+
+    ui.clear_scr()
+    username  = username  if username  else \
+                ui.input("insira seu nome de usuário")
+    room_name = room_name if room_name else \
+                ui.input("insira nome da sala")
+
+    ok, err = binder.join_room(username, room_name)
+    if not ok: #! fazer match
+        if   err == 'room':
+            ans = ui.input(title="erro: sala inexistente.",
+                           prompt=f"deseja criar a nova sala {room_name}? (s/n)") \
+                          .strip().casefold()
+            if   ans == 's' or ans == 'y' or not ans:
+                ok, err = binder.create_room(room_name)
+                ok, err = binder.join_room(username, room_name)
+            elif ans == 'n':
+                return False, ui.draw_scr(extra="ok", prompt='')
+            else:
+                return False, ui.draw_scr(extra="por favor tente novamente", prompt='')
+        elif err == 'user':
+            username = ui.input(title='erro: nome de usuário já escolhido.',
+                                prompt="digite um novo nome:")
+            ok, err = binder.join_room(username, room_name)
+
+    if ok: msgs = err
+    else:
+        ui.draw_scr(title="ocorreu um erro inesperado",
+                    extra="por favor tente novamente")
+        return False, ()
+    
+    return True, msgs
+
 def main():
-    global msgs, username, room_name
+    global msgs
 
-    _ = binder.create_room(room_name) #! não fazer isso aqui
-    _ = binder.join_room(username, room_name)
-
-    #_ = binder.send_message(username, room_name, '')
-    #! ^ pra não precisar disso tem que mexer no servidor
+    ok, msgs = register_menu()
+    if not ok: raise KeyboardInterrupt
 
     clear = True
     lines = []
@@ -98,7 +141,7 @@ def main():
             'veja os comandos disponíveis com :help' #! ainda não tá assim
     while True:
         if not q.empty():
-            clear, lines, extra = True, [], ''
+            clear, lines, extra = True, [], ' '
 
             msg = q.get()
             if   msg.startswith(':'):
@@ -121,24 +164,21 @@ def main():
 
 
 if __name__ == "__main__":
-    username  = input("insira seu nome de usuário: ") #! pegar da thread de input(por dentro da main)?
-    room_name = input("insira nome da sala: ") #! pegar da thread de input(por dentro da main)?
-
     Thread(name='input_thread', daemon=True,
            target=queue_input, args=[q]).start()
 
-    try: main()
-    except KeyboardInterrupt:
-        ui.clear_scr() #! talvez mostrar um menuzinho
-        print("saindo do programa")
+    try:
+        main()
     except ConnectionRefusedError: #! ver
         ui.clear_scr() #! talvez perguntar se tentar de novo
-        print("não foi possível manter a conexão com o servidor")
-        connected = False
+        ui.warn("não foi possível manter a conexão com o servidor")
+        ui.warn("saindo do programa")
     except ConnectionError: #! ver
         ui.clear_scr() #! talvez perguntar se tentar de novo
-        print("erro na comunicação com o servidor")
-        connected = False
+        ui.warn("erro na comunicação com o servidor")
+        ui.warn("saindo do programa")
+    except KeyboardInterrupt:
+        ui.warn("saindo do programa")
     finally:
-        if connected:
-            _ = binder.leave_room(username, room_name) #! fazer só se não tiver saído
+        if connected():
+            binder.leave_room(username, room_name)
