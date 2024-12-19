@@ -20,7 +20,6 @@ from .. import msg_to_tuple
 #! parsear args linha de comando
 #! fazer funçãozinha pra lidar com line wrap e linhas
 #! cores
-#! fazer comando help pra saber opções
 
 
 # setape
@@ -76,7 +75,7 @@ def interpret_command(msg: str,) -> tuple[list, str]:
  
         msg = ' '.join(rest).strip()
         if msg:
-            _ = binder.send_message(username, room_name, msg, recipient)
+            binder.send_message(username, room_name, msg, recipient)
         else: return lines, usage
 
         extra = f"enviada mensagem privada '{msg}' a {recipient}"
@@ -151,14 +150,14 @@ def main():
 
         new_msgs = binder.receive_messages(username, room_name)
 
-        if clear or not hist_eql(new_msgs, msgs):
+        if clear or new_msgs:
+            msgs += new_msgs
             ui.clear_scr()
             ui.draw_scr(title=f'chat da sala {room_name}',
-                        msgs=new_msgs,
+                        msgs=msgs,
                         lines=lines,
                         extra=extra,
                         prompt=f'{username}>')
-            msgs = new_msgs
 
         clear = False
 
