@@ -7,7 +7,6 @@ from typing    import Never
 from . import ui
 
 from .. import CHAT_ADDR, CHAT_PORT #! binder
-from .. import msg_to_tuple
 
 
 #! lidar com entrada inválida pro rpc

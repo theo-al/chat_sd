@@ -1,8 +1,6 @@
 from time   import strftime
 from typing import NamedTuple
 
-#! se o usuário não tiver na sala, não deixar enviar mensagem
-#! se o usuário já tiver na sala, não deixar entrar
 
 room = NamedTuple('room', [('users',    dict[str, dict]),
                            ('messages', list[dict])])
