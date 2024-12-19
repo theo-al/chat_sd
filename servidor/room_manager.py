@@ -44,7 +44,7 @@ def list_rooms():
     return list(rooms.keys())
 
 def list_users(room_name):
-    return rooms[room_name].users.keys() \
+    return list(rooms[room_name].users.keys()) \
            if room_name in rooms else []
 
 def add_message(room_name, username, content, recipient=None):
