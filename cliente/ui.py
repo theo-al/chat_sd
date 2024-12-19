@@ -16,13 +16,11 @@ else:
     def clear_scr():
         print(clear_scr_seq, end='') 
 
-def move_cursor(x: int, y: int) -> None:
-    print(f"\033c[{x};{y}f") #! checar ordem / portabilidade
-
+#! trocar pra um callback no draw_scr
 def render_msg(msg: dict) -> str:
     ts, author, recipient, content = msg_to_tuple(msg)
     return f"[{ts}] {author}: {content}" if not recipient else \
-           f"[{ts}] {author} (para você): {content}"
+           f"[{ts}] {author} (secreto): {content}"
 
 def draw_scr(title: str='',
              msgs: list[dict[str, str]]=[],
@@ -30,11 +28,9 @@ def draw_scr(title: str='',
              extra: str=' ',
              prompt: str='>') -> None:
     sz = get_terminal_size()
-    max_msgs = sz.lines - len(lines) - 3#! descobrir esse 3 com código
+    max_msgs = sz.lines - len(lines) - 3
 
-    #! não printar o título/extra se tiverem vazios, aproveitar pra contar linhas extras
-
-    print(title[:sz.columns]) #! não vai aparecer se tiver mensagens longas
+    print(title[:sz.columns])
 
     for m in msgs[-max_msgs:]: 
         print(render_msg(m)[:sz.columns])
@@ -48,7 +44,7 @@ def draw_scr(title: str='',
 def warn(msg: str):
     draw_scr(extra=msg, prompt='')
 
-def input(prompt='', lines=[], title='', clear=True, queue=None):
+def input(prompt='', lines=[], title='', clear=True):
     self = input
 
     if clear: clear_scr()

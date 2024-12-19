@@ -2,7 +2,7 @@ from time   import strftime
 from typing import NamedTuple
 
 
-room = NamedTuple('room', [('users',    dict[str, dict]),
+room = NamedTuple('room', [('users',    dict[str, int]),
                            ('messages', list[dict])])
 
 rooms = dict[str, room]()
@@ -71,7 +71,7 @@ def get_messages(room_name, recipient):
     msgs = list(filter(lambda msg: (msg["to"]   == recipient or
                                     msg['from'] == recipient or
                                     msg["to"] is None),
-                rooms[room_name].messages[next_idx:])) #! checar se duplica
+                rooms[room_name].messages[next_idx:]))
     
     if msgs: rooms[room_name].users[recipient] = len(rooms[room_name].messages) - 1
 
