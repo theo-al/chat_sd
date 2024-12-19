@@ -3,9 +3,9 @@
 no diretório do projeto
 ```
 > cd ..
-> python -m chat.binder.main
-> python -m chat.servidor.main
-> python -m chat.cliente.main
+> python -m chat_sd.binder.main
+> python -m chat_sd.servidor.main
+> python -m chat_sd.cliente.main
 ```
 
 # binder 
