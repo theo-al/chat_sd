@@ -3,6 +3,7 @@
 no diretório do projeto
 ```
 > cd ..
+> python -m chat.binder.main
 > python -m chat.servidor.main
 > python -m chat.cliente.main
 ```
