@@ -40,13 +40,6 @@ def connected(): #! colocar no stub do binder aqui do client
     except Exception as e:  return False #! checar
     else:                   return True
 
-def msg_eql(a: dict, b: dict) -> bool:
-    return msg_to_tuple(a) == msg_to_tuple(b)
-
-def hist_eql(a: list, b: list) -> bool:
-    if len(a) != len(b): return False
-    return all(map(msg_eql, a, b))
-
 def is_cmd(s: str, cmd: str) -> bool:
     s = s.strip().casefold()
     return cmd.startswith(s)
