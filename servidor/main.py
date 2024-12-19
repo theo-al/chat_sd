@@ -1,7 +1,8 @@
 from xmlrpc.server import SimpleXMLRPCServer
+from xmlrpc.client import ServerProxy
 
-from .  import room_manager
-from .. import SERV_CHAT
+from .  import room_manager, SERV_CHAT
+from .. import BIND_PORT, BIND_ADDR
 
 # configuração inicial
 ADDR, PORT = SERV_CHAT
@@ -30,6 +31,9 @@ def main():
     server.register_function(receive_messages)
 
     server.register_function(ping)
+
+    binder = ServerProxy(f"http://{BIND_ADDR}:{BIND_PORT}", allow_none=True) #! binder
+    binder.set_addr(SERV_CHAT)
 
     print(f"Servidor rodando na porta {PORT}...")
     try: server.serve_forever()

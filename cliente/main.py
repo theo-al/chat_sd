@@ -6,7 +6,7 @@ from typing    import Never
 
 from . import ui
 
-from .. import CHAT_ADDR, CHAT_PORT #! binder
+from .. import BIND_ADDR, BIND_PORT
 
 
 #! lidar com entrada inválida pro rpc
@@ -22,7 +22,9 @@ from .. import CHAT_ADDR, CHAT_PORT #! binder
 
 
 # setape
-binder = ServerProxy(f"http://{CHAT_ADDR}:{CHAT_PORT}", allow_none=True) #! binder
+binder = ServerProxy(f"http://{BIND_ADDR}:{BIND_PORT}", allow_none=True) #! binder
+CHAT_ADDR, CHAT_PORT = binder.get_addr()
+server = ServerProxy(f"http://{CHAT_ADDR}:{CHAT_PORT}", allow_none=True) #! binder
 
 username  = None
 room_name = None
@@ -33,7 +35,7 @@ q     = Queue[str]()
 ui.input.queue = q #! explicar
 
 def connected(): #! colocar no stub do binder aqui do client
-    try: binder.ping()
+    try: server.ping()
 
     except ConnectionError: return False
     except Exception as e:  return False #! checar
@@ -67,12 +69,12 @@ def interpret_command(msg: str,) -> tuple[list, str]:
  
         msg = ' '.join(rest).strip()
         if msg:
-            binder.send_message(username, room_name, msg, recipient)
+            server.send_message(username, room_name, msg, recipient)
         else: return lines, usage
 
         extra = f"enviada mensagem privada '{msg}' a {recipient}"
     elif is_cmd(cmd, 'list'):
-        users = binder.list_users(room_name)
+        users = server.list_users(room_name)
         extra = 'usuários nessa sala: ' + ', '.join(users)
     elif is_cmd(cmd, 'help'):
         lines = ["[ajuda] comandos disponíveis:",
@@ -94,17 +96,17 @@ def register_menu(): #! tá meio esquisito
     room_name = room_name if room_name else \
                 ui.input(title='salas disponíveis:',
                          prompt="insira nome da sala",
-                         lines=binder.list_rooms())
+                         lines=server.list_rooms())
 
-    ok, err = binder.join_room(username, room_name)
+    ok, err = server.join_room(username, room_name)
     if not ok: #! fazer match
         if   err == 'room':
             ans = ui.input(title="erro: sala inexistente.",
                            prompt=f"deseja criar a nova sala {room_name}? (s/n)") \
                           .strip().casefold()
             if   ans == 's' or ans == 'y' or not ans:
-                ok, err = binder.create_room(room_name)
-                ok, err = binder.join_room(username, room_name)
+                ok, err = server.create_room(room_name)
+                ok, err = server.join_room(username, room_name)
             elif ans == 'n':
                 return False, ui.draw_scr(extra="ok", prompt='')
             else:
@@ -112,7 +114,7 @@ def register_menu(): #! tá meio esquisito
         elif err == 'user':
             username = ui.input(title='erro: nome de usuário já escolhido.',
                                 prompt="digite um novo nome:")
-            ok, err = binder.join_room(username, room_name)
+            ok, err = server.join_room(username, room_name)
 
     if ok: msgs = err
     else:
@@ -140,9 +142,9 @@ def main():
             if   msg.startswith(':'):
                 lines, extra = interpret_command(msg)
             elif msg:
-                _ = binder.send_message(username, room_name, msg)
+                _ = server.send_message(username, room_name, msg)
 
-        new_msgs = binder.receive_messages(username, room_name)
+        new_msgs = server.receive_messages(username, room_name)
 
         if clear or new_msgs:
             msgs += new_msgs
@@ -174,4 +176,4 @@ if __name__ == "__main__":
         ui.warn("saindo do programa")
     finally:
         if connected():
-            binder.leave_room(username, room_name)
+            server.leave_room(username, room_name)

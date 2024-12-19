@@ -8,5 +8,7 @@ no diretório do projeto
 ```
 
 # binder 
-não foi necessário
+métodos:
+get_addr(): retorna o endereço do servidor
+set_addr(): permite setar o endereço do servidor
 
