@@ -48,12 +48,13 @@ def draw_scr(title: str='',
 def warn(msg: str):
     draw_scr(extra=msg, prompt='')
 
-def input(prompt='', title='', clear=True, queue=None):
+def input(prompt='', lines=[], title='', clear=True, queue=None):
     self = input
 
     if clear: clear_scr()
     draw_scr(
         title=title,
+        lines=lines,
         extra=prompt,
     )
     assert self.queue

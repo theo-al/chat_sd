@@ -93,7 +93,9 @@ def register_menu(): #! tá meio esquisito
     username  = username  if username  else \
                 ui.input("insira seu nome de usuário")
     room_name = room_name if room_name else \
-                ui.input("insira nome da sala")
+                ui.input(title='salas disponíveis:',
+                         prompt="insira nome da sala",
+                         lines=binder.list_rooms())
 
     ok, err = binder.join_room(username, room_name)
     if not ok: #! fazer match
