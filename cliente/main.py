@@ -10,7 +10,6 @@ from .. import BIND_ADDR, BIND_PORT
 
 
 #! lidar com entrada inválida pro rpc
-#! lidar com retornos das funções
 #! fazer menu principal (com opção de ver e criar salas)
 #! fazer uma thread buscadora de mensagem
 
@@ -153,7 +152,8 @@ def main():
                         msgs=msgs,
                         lines=lines,
                         extra=extra,
-                        prompt=f'{username}>')
+                        prompt=f'{username}>',
+                        user=username)
 
         clear = False
 
@@ -162,8 +162,8 @@ if __name__ == "__main__":
     Thread(name='input_thread', daemon=True,
            target=queue_input, args=[q]).start()
 
-    try:
-        main()
+    try: main()
+
     except ConnectionRefusedError: #! ver
         ui.clear_scr() #! talvez perguntar se tentar de novo
         ui.warn("não foi possível manter a conexão com o servidor")

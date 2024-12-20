@@ -15,9 +15,6 @@ def set_addr(addr):
     global SERV_ADDR
     SERV_ADDR = addr
 
-# função para checar conexão com o servidor
-def ping(): return "pong"
-
 
 def main():
     server = SimpleXMLRPCServer((ADDR, PORT), allow_none=True)

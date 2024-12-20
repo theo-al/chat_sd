@@ -19,16 +19,28 @@ else:
 def move_cursor(x: int, y: int) -> None:
     print(f"\033c[{x};{y}f") #! checar ordem / portabilidade
 
-def render_msg(msg: dict) -> str:
+def render_msg(msg: dict, username=None) -> str:
     ts, author, recipient, content = msg_to_tuple(msg)
-    return f"[{ts}] {author}: {content}" if not recipient else \
-           f"[{ts}] {author} (para você): {content}"
+    _author = author if author != username else author + " (você)"
 
-def draw_scr(title: str='',
-             msgs: list[dict[str, str]]=[],
-             lines: list[str]=[],
-             extra: str=' ',
-             prompt: str='>') -> None:
+    if  (recipient is None) or (username is None): 
+        ret = f"[{ts}] {_author}: {content}"
+    elif recipient == username:
+        ret = f"[{ts}] {_author} (para você): {content}" 
+    elif author == username:
+        ret = f"[{ts}] {_author} para {recipient}: {content}"
+    else:
+        print(_author, author, recipient, username, content)
+        assert False
+    
+    return ret
+
+def draw_scr(title:  str='',
+             msgs:   list[dict]=[],
+             lines:  list[str]=[],
+             extra:  str=' ',
+             prompt: str='>',
+             user:   str|None=None) -> None:
     sz = get_terminal_size()
     max_msgs = sz.lines - len(lines) - 3#! descobrir esse 3 com código
 
@@ -37,7 +49,7 @@ def draw_scr(title: str='',
     print(title[:sz.columns]) #! não vai aparecer se tiver mensagens longas
 
     for m in msgs[-max_msgs:]: 
-        print(render_msg(m)[:sz.columns])
+        print(render_msg(m, username=user)[:sz.columns])
     for l in lines[:sz.lines]:
         print(l[:sz.columns])
 
