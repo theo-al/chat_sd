@@ -140,7 +140,7 @@ def interpret_command(msg: str, server=server) -> tuple[list, str]: #! melhorar
 
     cmd, *args = msg[1:].split()
 
-    if   is_cmd(cmd, 'quit'): raise KeyboardInterrupt # rsrsrs
+    if   is_cmd(cmd, 'quit'): raise KeyboardInterrupt
     elif is_cmd(cmd, 'exit'): #!
         server.leave_room(username, room_name)
         while not menu(): pass
@@ -165,11 +165,13 @@ def interpret_command(msg: str, server=server) -> tuple[list, str]: #! melhorar
         users = server.list_users(room_name)
         extra = 'usuários nessa sala: ' + ', '.join(users)
     elif is_cmd(cmd, 'help'):
-        lines = ["[ajuda] comandos disponíveis:",
-                 ":quit                      [sai do programa]",
-                 ":exit                      [sai da sala]",
-                 ":tell <destino> <mensagem> [manda uma mensagem privada]",
-                 ":list                      [lista os usuários na sala]"]
+        lines = [
+            ui.highlight('ajuda: comandos disponíveis'),
+            "  :quit                      [sai do programa]",
+            "  :exit                      [sai da sala]",
+            "  :tell <destino> <mensagem> [manda uma mensagem privada]",
+            "  :list                      [lista os usuários na sala]"
+        ]
     else:
         extra = f"comando inválido: {msg}"
 
@@ -192,8 +194,8 @@ def main():
 
     clear = True
     lines = []
-    extra = 'dica: escreva e aperte enter para enviar uma mensagem, ' \
-            'veja os comandos disponíveis com :help' #! ainda não tá assim
+    extra = "dica: escreva e aperte enter para enviar uma mensagem, " \
+            "veja os comandos disponíveis com `:help`"
     while True:
         if not q.empty():
             clear, lines, extra = True, [], ' '
@@ -209,7 +211,7 @@ def main():
         if clear or new_msgs:
             msgs += new_msgs
             ui.clear_scr()
-            ui.draw_scr(title=f'chat da sala {room_name}',
+            ui.draw_scr(title=ui.highlight(f'chat da sala {room_name}'),
                         msgs=msgs,
                         lines=lines,
                         extra=extra,
