@@ -4,6 +4,7 @@ from typing import NamedTuple
 from threading import Timer
 
 
+## tipos e constantes
 room = NamedTuple('room', [('users',    dict[str, dict]),
                            ('messages', list[dict]),
                            ('timer',    Timer | None)])
@@ -13,6 +14,7 @@ rooms = dict[str, room]()
 MAX_INACTIVE_TIME = 5*60
 
 
+## funções utilitárias
 def curr_time() -> str:
     return strftime("%Y-%m-%d %H:%M:%S")
 
@@ -35,6 +37,7 @@ def get_past_messages(room_name: str, max_msgs=50):
     return result[-max_msgs:] # retorna as últimas {max_msgs} mensagens
 
 
+## funções pedidas simples
 def list_rooms() -> list[str]:
     return list(rooms.keys())
 
@@ -43,6 +46,7 @@ def list_users(room_name: str) -> list[str]:
            if room_name in rooms else []
 
 
+## resto das funções pedidas
 def create_room(room_name: str) -> tuple[bool, str]:
     if room_exists(room_name): return False, "room"
 

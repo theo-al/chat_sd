@@ -2,10 +2,11 @@ from xmlrpc.server import SimpleXMLRPCServer
 
 from .. import SERV_BIND
 
-# configuração inicial
-ADDR, PORT = SERV_BIND
 
+## configuração inicial
+ADDR, PORT = SERV_BIND
 SERV_ADDR = None
+
 # rpc
 def get_addr():
     while not SERV_ADDR: pass
@@ -16,6 +17,7 @@ def set_addr(addr):
     SERV_ADDR = addr
 
 
+## programa principal
 def main():
     server = SimpleXMLRPCServer((ADDR, PORT), allow_none=True)
 
@@ -30,3 +32,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+#! registrar tudo

@@ -17,7 +17,7 @@ from .. import BIND_ADDR, BIND_PORT
 #! cores (+- já)
 
 
-# setape
+## configuração inicial
 binder = ServerProxy(f"http://{BIND_ADDR}:{BIND_PORT}", allow_none=True)
 CHAT_ADDR, CHAT_PORT = binder.get_addr()
 server = ServerProxy(f"http://{CHAT_ADDR}:{CHAT_PORT}", allow_none=True)
@@ -30,6 +30,53 @@ q     = Queue[str]()
 
 ui.input.queue = q # explicar no vídeo
 
+
+## funções principais
+def queue_input(queue: Queue) -> Never:
+    while True:
+        msg = input().strip()
+        queue.put(msg)
+
+def main():
+    global msgs, username, room_name
+
+    while not menu(): pass
+
+    username, room_name = register()
+    ok, msgs = join(room_name)
+    if not ok:
+        raise KeyboardInterrupt
+
+    clear = True
+    lines = []
+    extra = "dica: escreva e aperte enter para enviar uma mensagem, " \
+            "veja os comandos disponíveis com `:help`"
+    while True:
+        if not q.empty():
+            clear, lines, extra = True, [], ' '
+
+            msg = q.get()
+            if   msg.startswith(':'):
+                lines, extra = interpret_command(msg)
+            elif msg:
+                _ = server.send_message(username, room_name, msg)
+
+        new_msgs = server.receive_messages(username, room_name)
+
+        if clear or new_msgs:
+            msgs += new_msgs
+            ui.clear_scr()
+            ui.draw_scr(title=ui.highlight(f'chat da sala {room_name}'),
+                        msgs=msgs,
+                        lines=lines,
+                        extra=extra,
+                        prompt=f'{username}>',
+                        user=username)
+
+        clear = False
+
+
+## funções utilitárias
 def connected(): #! colocar no stub do binder aqui do client
     try: server.ping()
 
@@ -177,50 +224,8 @@ def interpret_command(msg: str, server=server) -> tuple[list, str]: #! melhorar
 
     return lines, extra
 
-def queue_input(queue: Queue) -> Never:
-    while True:
-        msg = input().strip()
-        queue.put(msg)
 
-def main():
-    global msgs, username, room_name
-
-    while not menu(): pass
-
-    username, room_name = register()
-    ok, msgs = join(room_name)
-    if not ok:
-        raise KeyboardInterrupt
-
-    clear = True
-    lines = []
-    extra = "dica: escreva e aperte enter para enviar uma mensagem, " \
-            "veja os comandos disponíveis com `:help`"
-    while True:
-        if not q.empty():
-            clear, lines, extra = True, [], ' '
-
-            msg = q.get()
-            if   msg.startswith(':'):
-                lines, extra = interpret_command(msg)
-            elif msg:
-                _ = server.send_message(username, room_name, msg)
-
-        new_msgs = server.receive_messages(username, room_name)
-
-        if clear or new_msgs:
-            msgs += new_msgs
-            ui.clear_scr()
-            ui.draw_scr(title=ui.highlight(f'chat da sala {room_name}'),
-                        msgs=msgs,
-                        lines=lines,
-                        extra=extra,
-                        prompt=f'{username}>',
-                        user=username)
-
-        clear = False
-
-
+## tratamento de erros e inicialização das threads
 if __name__ == "__main__":
     Thread(name='input_thread', daemon=True,
            target=queue_input, args=[q]).start()

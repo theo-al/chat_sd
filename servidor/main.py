@@ -4,10 +4,11 @@ from xmlrpc.client import ServerProxy
 from .  import room_manager, SERV_CHAT
 from .. import BIND_PORT, BIND_ADDR
 
-# configuração inicial
+
+## configuração inicial
 ADDR, PORT = SERV_CHAT
 
-# wrappers rpc que mudam assinatura
+# wrappers rpc pra mudar assinatura
 def send_message(username, room_name, content, recipient=None):
     return room_manager.add_message(room_name, username, content, recipient)
 
@@ -18,9 +19,11 @@ def receive_messages(username, room_name):
 def ping(): return "pong"
 
 
+## programa principal
 def main():
     server = SimpleXMLRPCServer((ADDR, PORT), allow_none=True)
 
+    # registrando as funções
     server.register_function(room_manager.create_room)
     server.register_function(room_manager.join_room)
     server.register_function(room_manager.leave_room)
@@ -32,9 +35,11 @@ def main():
 
     server.register_function(ping)
 
+    # se registrando no binder
     binder = ServerProxy(f"http://{BIND_ADDR}:{BIND_PORT}", allow_none=True) #! binder
     binder.set_addr(SERV_CHAT)
 
+    # rodando
     print(f"Servidor rodando na porta {PORT}...")
     try: server.serve_forever()
 
@@ -43,3 +48,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+#! registrar tudo no binder

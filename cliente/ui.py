@@ -1,24 +1,22 @@
 import subprocess
-import os
 
 from shutil import get_terminal_size
 
 from .. import msg_to_tuple
 
 
-if os.name == 'nt': 
-    def clear_scr():
-        subprocess.call('cls', shell=True)
-    #! ver se funciona
-else:
-    clear_scr_seq = subprocess.check_output('clear', shell=True).decode()
+## setape
+clear_scr_seq = subprocess.check_output('clear', shell=True).decode() #! unix
 
-    def clear_scr():
-        print(clear_scr_seq, end='') 
+## funções que mexem com o terminal
+def clear_scr():
+    print(clear_scr_seq, end='') 
 
 def highlight(s: str):
     return "\033[7m" + s + "\033[0m"
 
+
+## funções utilitárias
 def render_msg(msg: dict, username=None) -> str:
     ts, author, recipient, content = msg_to_tuple(msg)
     _author = author if author != username else author + " (você)"
@@ -35,6 +33,8 @@ def render_msg(msg: dict, username=None) -> str:
     
     return ret
 
+
+## funções de desenhar na tela
 def draw_scr(title:  str='',
              msgs:   list[dict]=[],
              lines:  list[str]=[],
@@ -62,7 +62,8 @@ def draw_scr(title:  str='',
         print(l[:sz.columns])
 
     if _extra: print(_extra)
-    print(_prompt, end=' ', flush=True)
+    if _prompt:
+        print(_prompt, end=' ', flush=True)
 
 def warn(msg: str):
     draw_scr(extra=msg, prompt='')
@@ -79,4 +80,4 @@ def input(prompt=' ', lines=[], title='', clear=True, queue=None):
     assert self.queue
     return self.queue.get()
 
-input.queue = None #! explicar
+input.queue = None # explicar no vídeo
